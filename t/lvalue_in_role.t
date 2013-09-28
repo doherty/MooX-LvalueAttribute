@@ -8,8 +8,15 @@ use Devel::Hide qw(Class::XSAccessor);
     use Moo::Role;
     use MooX::LvalueAttribute;
 
+    has one  => (
+                  is => 'rw',
+                  default => 'role default value',
+                  lvalue => 1,
+                );
+
     has three => (
                   is => 'rw',
+                  default => sub { 'three' },
                   lvalue => 1,
                  );
 
@@ -75,5 +82,21 @@ eval { $lvalue3->two = 42 };
 like $@, qr/Can't modify non-lvalue subroutine/, "a class without lvalue - first attribute";
 eval { $lvalue3->four = 42 };
 like $@, qr/Can't modify non-lvalue subroutine/, "a class without lvalue - second attribute";
+
+subtest q/Attribute "attr value" isn't numeric/ => sub {
+  plan tests => 4;
+  no warnings;
+  use warnings;
+
+  # Use defaults
+  my $default = MooLvalue->new;
+  is sprintf('%s', $default->one)   => 'role default value';
+  is sprintf('%s', $default->three) => 'three';
+
+  # Provide values in constuctor
+  my $val = MooLvalue->new( one => 'explicit value', three => 'four' );
+  is sprintf('%s', $val->one)   => 'explicit value';
+  is sprintf('%s', $val->three) => 'four';
+};
 
 done_testing;
